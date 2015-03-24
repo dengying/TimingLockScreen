@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">锁屏定时器</string>
+    <string name="action_settings">设置</string>
+    <string name="timer_time">定时时间</string>
+    <string name="hour">小时</string>
+    <string name="minute">分钟</string>
+    <string name="start">启动</string>
+
+</resources>

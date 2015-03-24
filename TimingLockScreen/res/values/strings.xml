@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">TimedLockScreen</string>
+    <string name="action_settings">Settings</string>
+    <string name="timer_time">Timer</string>
+    <string name="hour">Hours</string>
+    <string name="minute">Minutes</string>
+    <string name="start">Start</string>
+    <string name="noset_time">请先设置下定时时间.</string>
+    <string name="stop">Stop</string>
+
+</resources>
