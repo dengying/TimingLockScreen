@@ -1,9 +1,13 @@
 package com.dy.timinglockscreen;
 
+import java.nio.channels.GatheringByteChannel;
 import java.util.Calendar;
+import java.util.Currency;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.dy.timinglockscreen.service.TimerService;
 
 import android.R.anim;
 import android.app.Activity;
@@ -26,6 +30,7 @@ import android.widget.Toast;
 
 public class MainFragment extends Fragment {
 	
+	private static MainFragment currentFragment;
 	private DevicePolicyManager policyManager;  
 	private ComponentName componentName;
 	private static Timer timer;
@@ -35,9 +40,6 @@ public class MainFragment extends Fragment {
 	private Spinner spinner_minute;
 	private boolean isEnabled=false;
 	private Button btn_lockscreen;
-	
-	public MainFragment() {
-	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -48,7 +50,7 @@ public class MainFragment extends Fragment {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		
+		currentFragment=this;
 		//获取设备管理服务  
         policyManager = (DevicePolicyManager) getActivity().getSystemService(Context.DEVICE_POLICY_SERVICE);  
         //AdminReceiver 继承自 DeviceAdminReceiver  
@@ -59,14 +61,7 @@ public class MainFragment extends Fragment {
 			
 			@Override
 			public void onClick(View view) {
-				if(isEnabled){
-					if(timer!=null){
-						timer.cancel();
-					}
-					timer=null;
-				}else{
-					startTimerLockScreen();
-				}
+				clickEnableButton();
 			}
 		});
 		hourArr=new Integer[25];
@@ -87,28 +82,12 @@ public class MainFragment extends Fragment {
 		ArrayAdapter<Integer> minute_adapter = new ArrayAdapter<Integer>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, minuteArr);
 		minute_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner_minute.setAdapter(minute_adapter);
-		if(timer!=null){
-			isEnabled=true;
-		}else{
-			isEnabled=false;
-		}
+		
+		initSetTime();
+		
 	}
 	
-	/**
-	 * 锁定
-	 */
-	private void lockScreen(){  
-		boolean active = policyManager.isAdminActive(componentName);
-		if (!active) {// 若无权限
-			activeManage();// 去获得权限
-		}else{
-			policyManager.lockNow();// 直接锁屏
-			// killMyself ，锁屏之后就立即kill掉我们的Activity，避免资源的浪费;
-			android.os.Process.killProcess(android.os.Process.myPid());  
-		}
-	}  
-	
-	private void activeManage() {  
+	public void activeManage() {  
         // 启动设备管理(隐式Intent) - 在AndroidManifest.xml中设定相应过滤器  
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);  
         //权限列表  
@@ -122,61 +101,14 @@ public class MainFragment extends Fragment {
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		if(resultCode==Activity.RESULT_OK){
-//			policyManager.lockNow();// 直接锁屏
-			startTimerLockScreen();
+			//开启定时锁屏
+			Intent intent=new Intent(getActivity(), TimerService.class);
+			intent.putExtra(MyApplication.KEY_TIMER_ACTION, MyApplication.TIMER_ACTION_START);
+			getActivity().startService(intent);
 		}else if(resultCode==Activity.RESULT_CANCELED){
-			
+			//重置
+			saveSetTime(0);
 		}
-	}
-	
-	/**
-	 * 定时锁定屏幕
-	 */
-	private void startTimerLockScreen(){
-		
-		try{
-			if(timer!=null){
-				timer.cancel();
-				timer=null;
-			}
-			boolean active = policyManager.isAdminActive(componentName);
-			if (!active) {// 若无权限
-				activeManage();// 去获得权限
-				return;
-			}
-			int setTime=getSettingTime();
-			if(setTime>0){
-				Calendar calendar=Calendar.getInstance();
-				Date currentDate=new Date();
-				calendar.setTime(currentDate);
-				calendar.add(Calendar.MINUTE, setTime);
-				timer=new Timer();
-				timer.schedule(new TimerTask() {
-					
-					@Override
-					public void run() {
-						
-						getActivity().runOnUiThread(new Runnable() {
-							
-							@Override
-							public void run() {
-								lockScreen();
-							}
-						});
-						timer=null;
-					}
-				}, calendar.getTime());
-				MyApplication.lockScreenDate=calendar.getTime();
-				MyApplication.TimerLockScreenMinute=setTime;
-				saveSetTime(MyApplication.TimerLockScreenMinute);
-			}else{
-				Toast.makeText(getActivity(), R.string.noset_time, Toast.LENGTH_SHORT).show();
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
 	}
 	
 	/**
@@ -232,12 +164,52 @@ public class MainFragment extends Fragment {
 		return time;
 	}
 	
-	@Override
-	public void onResume() {
-		// TODO Auto-generated method stub
-		super.onResume();
+	/**
+	 * 点击按钮
+	 */
+	private void clickEnableButton(){
+		
+		boolean active = policyManager.isAdminActive(componentName);
+		if (!active) {// 若无权限
+			activeManage();// 去获得权限
+		}else{
+			if(TimerService.isEnableLockScreenTimer()){
+				Intent intent=new Intent(getActivity(), TimerService.class);
+				intent.putExtra(MyApplication.KEY_TIMER_ACTION, MyApplication.TIMER_ACTION_STOP);
+				getActivity().startService(intent);
+			}else{
+				//保存设置的定时时间
+				saveSetTime(getSettingTime());
+				Intent intent=new Intent(getActivity(), TimerService.class);
+				intent.putExtra(MyApplication.KEY_TIMER_ACTION, MyApplication.TIMER_ACTION_START);
+				getActivity().startService(intent);
+			}
+		}
+		
+		
+	}
+	
+	private void initSetTime(){
+		
 		try{
-			if(timer!=null){
+			int time=getSaveSetTime();
+			int hour=time>60?((time-(time%60))/60):0;
+			int minute=time%60;
+			spinner_hour.setSelection(hour);
+			spinner_minute.setSelection(minute);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * 初始化按钮
+	 */
+	public void initEnableButton(){
+		
+		try{
+			if(TimerService.isEnableLockScreenTimer()){
 				isEnabled=true;
 			}else{
 				isEnabled=false;
@@ -249,11 +221,35 @@ public class MainFragment extends Fragment {
 					btn_lockscreen.setText(R.string.start);
 				}
 			}
-			int time=getSaveSetTime();
-			int hour=time>60?((time-(time%60))/60):0;
-			int minute=time%60;
-			spinner_hour.setSelection(hour);
-			spinner_minute.setSelection(minute);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * 获取实例
+	 * @return
+	 */
+	public static MainFragment getInstance(){
+		
+		return currentFragment;
+		
+	}
+	
+	@Override
+	public void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		currentFragment=null;
+	}
+	
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		try{
+			initEnableButton();
 		}catch(Exception e){
 			e.printStackTrace();
 		}

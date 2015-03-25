@@ -1,5 +1,7 @@
 package com.dy.timinglockscreen;
 
+import com.dy.timinglockscreen.service.TimerService;
+
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -14,10 +16,16 @@ import android.os.Build;
 
 public class MainActivity extends ActionBarActivity {
 
+	private static MainActivity currentInstance;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		currentInstance=this;
 		setContentView(R.layout.activity_main);
+		//启动服务
+		Intent intent=new Intent(this, TimerService.class);
+		startService(intent);
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction().add(R.id.container, new MainFragment()).commit();
@@ -47,12 +55,25 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	public void onBackPressed() {
 		// TODO Auto-generated method stub
-//		super.onBackPressed();
-		Intent mHomeIntent = new Intent(Intent.ACTION_MAIN);
-        mHomeIntent.addCategory(Intent.CATEGORY_HOME);
-        mHomeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        startActivity(mHomeIntent);
+		super.onBackPressed();
 		
+	}
+	
+	/**
+	 * 返回实例
+	 * @return
+	 */
+	public static MainActivity getInstance(){
+		
+		return currentInstance;
+		
+	}
+	
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		currentInstance=null;
 	}
 
 }

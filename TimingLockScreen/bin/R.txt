@@ -349,6 +349,7 @@ int string action_settings 0x7f0a000e
 int string app_name 0x7f0a000d
 int string hour 0x7f0a0010
 int string minute 0x7f0a0011
+int string nextlock_lefttime 0x7f0a0015
 int string noset_time 0x7f0a0013
 int string start 0x7f0a0012
 int string stop 0x7f0a0014

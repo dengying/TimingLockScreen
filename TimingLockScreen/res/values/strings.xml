@@ -9,5 +9,6 @@
     <string name="start">Start</string>
     <string name="noset_time">请先设置下定时时间.</string>
     <string name="stop">Stop</string>
+    <string name="nextlock_lefttime">距离下次锁屏剩余时间：</string>
 
 </resources>

@@ -11,6 +11,9 @@ public class MyApplication extends Application {
 	public final static String KEY_SETTIME="SetTime";
 	public final static String KEY_SETTIME_HOUR="SetTime_Hour";
 	public final static String KEY_SETTIME_MINUTE="SetTime_Minute";
+	public final static String KEY_TIMER_ACTION="Timer-Action";
+	public final static int TIMER_ACTION_STOP=0;
+	public final static int TIMER_ACTION_START=1;
 	
 
 }
