@@ -13,8 +13,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="15dp"
-        android:paddingBottom="25dp"
         android:orientation="vertical" >
 
         <TextView
@@ -26,13 +24,16 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="#12b1ad"
+        android:textSize="16sp"
+        android:textStyle="italic"
         android:layout_marginBottom="2dp"
         android:text="@string/timer_time" />
     
     <View 
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#ccc"/>
+        android:background="#12b1ad"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -40,7 +41,7 @@
         android:layout_marginTop="2dp"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:background="#f5f5f5"
+        android:background="#f9f9f9"
         android:orientation="vertical" >
     
 
@@ -62,6 +63,7 @@
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#12b1ad"
             android:layout_marginLeft="10dp"
             android:text="@string/hour" />
     </LinearLayout>
@@ -86,6 +88,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
+            android:textColor="#12b1ad"
             android:text="@string/minute" />
     </LinearLayout>
     
@@ -102,6 +105,8 @@
             android:id="@+id/btn_lockscreen"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/btn_enable_selector"
+            android:textColor="#fff"
             android:minWidth="120dp"
             android:text="@string/start" />
 

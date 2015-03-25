@@ -118,7 +118,10 @@ public class TimerService extends Service {
 						try{
 							if(MyApplication.lockScreenDate!=null && MyApplication.lockScreenDate.before(new Date())){
 								lockScreen();
-								timer=null;
+								if(timer!=null){
+									timer.cancel();
+									timer=null;
+								}
 								cancelTimerNotice();
 							}else{
 								showTimerNotice();
