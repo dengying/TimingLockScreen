@@ -59,14 +59,20 @@ public class TimerService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO Auto-generated method stub
-		int action=intent.getIntExtra(MyApplication.KEY_TIMER_ACTION, -1);
-		switch(action){
-			case MyApplication.TIMER_ACTION_START:
-				startTimerLockScreen();
-				break;
-			case MyApplication.TIMER_ACTION_STOP:
-				stopTimerLockScreen();
-				break;
+		try{
+			if(intent!=null){
+				int action=intent.getIntExtra(MyApplication.KEY_TIMER_ACTION, -1);
+				switch(action){
+					case MyApplication.TIMER_ACTION_START:
+						startTimerLockScreen();
+						break;
+					case MyApplication.TIMER_ACTION_STOP:
+						stopTimerLockScreen();
+						break;
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -289,9 +295,14 @@ public class TimerService extends Service {
 	}
 	
 	@Override
+	public boolean stopService(Intent name) {
+		stopTimerLockScreen();
+		return super.stopService(name);
+	}
+	
+	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		stopTimerLockScreen();
 		currentInstance=null;
 	}
 

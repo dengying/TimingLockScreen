@@ -74,6 +74,14 @@ public class MainActivity extends ActionBarActivity {
 		// TODO Auto-generated method stub
 		super.onDestroy();
 		currentInstance=null;
+		try{
+			//未定时，关闭服务
+			if(!TimerService.isEnableLockScreenTimer()){
+				stopService(new Intent(this, TimerService.class));
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 }
