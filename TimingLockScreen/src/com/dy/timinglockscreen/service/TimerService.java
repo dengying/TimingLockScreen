@@ -220,7 +220,6 @@ public class TimerService extends Service {
 			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
 			int hour=preferences.getInt(MyApplication.KEY_SETTIME_HOUR, 0);
 			int minute=preferences.getInt(MyApplication.KEY_SETTIME_MINUTE, 0);
-			long startTime=preferences.getInt(MyApplication.KEY_SETTIME_STARTTIME, 0);
 			time=hour*60+minute;
 		}catch(Exception e){
 			e.printStackTrace();
@@ -237,7 +236,7 @@ public class TimerService extends Service {
 		long time=0;
 		try{
 			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
-			time=preferences.getInt(MyApplication.KEY_SETTIME_STARTTIME, 0);
+			time=preferences.getLong(MyApplication.KEY_SETTIME_STARTTIME, 0);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
