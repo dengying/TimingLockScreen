@@ -117,6 +117,7 @@ public class TimerService extends Service {
 				return;
 			}
 			int setTime=getSaveSetTime();
+			startTime=getSaveStartTime();
 			if(setTime>0){
 				System.out.println("开启定时");
 				Calendar calendar=Calendar.getInstance();
@@ -186,6 +187,7 @@ public class TimerService extends Service {
 		if(MainFragment.getInstance()!=null){
 			MainFragment.getInstance().initEnableButton();
 		}
+		saveStartTime(0);
 		saveIsTimer(false);
 	}
 	
@@ -241,6 +243,24 @@ public class TimerService extends Service {
 			e.printStackTrace();
 		}
 		return time;
+	}
+	
+	/**
+	 * 保存定时开始时间
+	 * @param hour
+	 * @param minute
+	 */
+	private void saveStartTime(long startTime){
+		
+		try{
+			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
+			Editor editor=preferences.edit();
+			editor.putLong(MyApplication.KEY_SETTIME_STARTTIME, startTime);
+			editor.commit();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
