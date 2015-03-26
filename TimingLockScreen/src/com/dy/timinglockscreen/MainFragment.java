@@ -209,7 +209,7 @@ public class MainFragment extends Fragment {
 	public void initEnableButton(){
 		
 		try{
-			if(TimerService.isEnableLockScreenTimer()){
+			if(TimerService.getInstance().isEnableLockScreenTimer()){
 				isEnabled=true;
 			}else{
 				isEnabled=false;

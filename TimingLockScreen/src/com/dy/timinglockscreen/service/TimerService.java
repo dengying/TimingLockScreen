@@ -1,17 +1,9 @@
 package com.dy.timinglockscreen.service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import com.dy.timinglockscreen.MainActivity;
-import com.dy.timinglockscreen.MainFragment;
-import com.dy.timinglockscreen.MyApplication;
-import com.dy.timinglockscreen.MyDeviceAdminReceiver;
-import com.dy.timinglockscreen.R;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -28,15 +20,23 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
 
+import com.dy.timinglockscreen.MainActivity;
+import com.dy.timinglockscreen.MainFragment;
+import com.dy.timinglockscreen.MyApplication;
+import com.dy.timinglockscreen.MyDeviceAdminReceiver;
+import com.dy.timinglockscreen.R;
+
 public class TimerService extends Service {
 
 	private DevicePolicyManager policyManager;  
 	private ComponentName componentName;
-	private static Timer timer;
+	private Timer timer;
 	private static TimerService currentInstance;
 	private Handler handler=new Handler();
 	private NotificationManager noticeManager;
 	private final int NoticeID=20001;
+	public static boolean isEnableTimer=false;
+	private long startTime=0;
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -53,7 +53,13 @@ public class TimerService extends Service {
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);  
         //通知服务
         noticeManager=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		
+        
+        startTime=getSaveStartTime();
+		isEnableTimer=getSaveIsTimer();
+		System.out.println("是否定时："+isEnableTimer);
+		if(isEnableTimer){
+			startTimerLockScreen();
+		}
 	}
 	
 	@Override
@@ -112,23 +118,27 @@ public class TimerService extends Service {
 			}
 			int setTime=getSaveSetTime();
 			if(setTime>0){
+				System.out.println("开启定时");
 				Calendar calendar=Calendar.getInstance();
-				Date currentDate=new Date();
-				calendar.setTime(currentDate);
+				if(startTime>0){
+					Date startDate=new Date(startTime);
+					calendar.setTime(startDate);
+				}else{
+					Date startDate=new Date();
+					startTime=startDate.getTime();
+					calendar.setTime(startDate);
+				}
 				calendar.add(Calendar.MINUTE, setTime);
 				timer=new Timer();
 				timer.schedule(new TimerTask() {
 					
 					@Override
 					public void run() {
+						System.out.println("定时中。。。");
 						try{
 							if(MyApplication.lockScreenDate!=null && MyApplication.lockScreenDate.before(new Date())){
 								lockScreen();
-								if(timer!=null){
-									timer.cancel();
-									timer=null;
-								}
-								cancelTimerNotice();
+								stopTimerLockScreen();
 							}else{
 								showTimerNotice();
 							}
@@ -146,10 +156,12 @@ public class TimerService extends Service {
 							e.printStackTrace();
 						}
 					}
-				}, 0, 60000);
+				}, 0, 5000);
+				isEnableTimer=true;
 				MyApplication.lockScreenDate=calendar.getTime();
 				MyApplication.TimerLockScreenMinute=setTime;
-				saveSetTime(MyApplication.TimerLockScreenMinute);
+				saveSetTime(MyApplication.TimerLockScreenMinute, startTime);
+				saveIsTimer(true);
 			}else{
 				Toast.makeText(this, R.string.noset_time, Toast.LENGTH_SHORT).show();
 			}
@@ -168,11 +180,13 @@ public class TimerService extends Service {
 			timer.cancel();
 			timer=null;
 		}
+		isEnableTimer=false;
 		MyApplication.lockScreenDate=null;
 		cancelTimerNotice();
 		if(MainFragment.getInstance()!=null){
 			MainFragment.getInstance().initEnableButton();
 		}
+		saveIsTimer(false);
 	}
 	
 	/**
@@ -180,13 +194,14 @@ public class TimerService extends Service {
 	 * @param hour
 	 * @param minute
 	 */
-	private void saveSetTime(int time){
+	private void saveSetTime(int time, long startTime){
 		
 		try{
 			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
 			Editor editor=preferences.edit();
 			editor.putInt(MyApplication.KEY_SETTIME_HOUR, time>60?((time-(time%60))/60):0);
 			editor.putInt(MyApplication.KEY_SETTIME_MINUTE, time%60);
+			editor.putLong(MyApplication.KEY_SETTIME_STARTTIME, startTime);
 			editor.commit();
 		}catch(Exception e){
 			e.printStackTrace();
@@ -205,7 +220,24 @@ public class TimerService extends Service {
 			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
 			int hour=preferences.getInt(MyApplication.KEY_SETTIME_HOUR, 0);
 			int minute=preferences.getInt(MyApplication.KEY_SETTIME_MINUTE, 0);
+			long startTime=preferences.getInt(MyApplication.KEY_SETTIME_STARTTIME, 0);
 			time=hour*60+minute;
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return time;
+	}
+	
+	/**
+	 * 获得设置定时开始时间
+	 * @return
+	 */
+	private long getSaveStartTime(){
+		
+		long time=0;
+		try{
+			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_SETTIME, Activity.MODE_PRIVATE);
+			time=preferences.getInt(MyApplication.KEY_SETTIME_STARTTIME, 0);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -286,17 +318,48 @@ public class TimerService extends Service {
 	 */
 	public static boolean isEnableLockScreenTimer(){
 		
-		if(timer!=null){
-			return true;
-		}else{
-			return false;
+		return isEnableTimer;
+		
+	}
+	
+	/**
+	 * 保存是否定时
+	 * @param hour
+	 * @param minute
+	 */
+	private void saveIsTimer(boolean isTimer){
+		
+		try{
+			System.out.println("保存"+isTimer);
+			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_ISTIMER, Activity.MODE_PRIVATE);
+			Editor editor=preferences.edit();
+			editor.putBoolean(MyApplication.KEY_ISTIMER, isTimer);
+			editor.commit();
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 		
 	}
 	
+	/**
+	 * 获得是否定时
+	 * @return
+	 */
+	private boolean getSaveIsTimer(){
+		
+		boolean isTimer=false;
+		try{
+			SharedPreferences preferences=getSharedPreferences(MyApplication.KEY_ISTIMER, Activity.MODE_PRIVATE);
+			isTimer=preferences.getBoolean(MyApplication.KEY_ISTIMER, false);
+			System.out.println("获取"+isTimer);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return isTimer;
+	}
+	
 	@Override
 	public boolean stopService(Intent name) {
-		stopTimerLockScreen();
 		return super.stopService(name);
 	}
 	

@@ -24,6 +24,7 @@ public class MainActivity extends ActionBarActivity {
 		currentInstance=this;
 		setContentView(R.layout.activity_main);
 		//Æô¶¯·þÎñ
+		System.out.println("MainActivity create");
 		Intent intent=new Intent(this, TimerService.class);
 		startService(intent);
 
