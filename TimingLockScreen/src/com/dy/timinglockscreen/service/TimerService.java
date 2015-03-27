@@ -157,7 +157,7 @@ public class TimerService extends Service {
 							e.printStackTrace();
 						}
 					}
-				}, 0, 5000);
+				}, 0, 60000);
 				isEnableTimer=true;
 				MyApplication.lockScreenDate=calendar.getTime();
 				MyApplication.TimerLockScreenMinute=setTime;

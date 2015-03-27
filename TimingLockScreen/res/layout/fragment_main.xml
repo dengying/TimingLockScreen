@@ -57,6 +57,7 @@
             android:id="@+id/spinner_hour"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            style="@style/spinner_style"
             android:layout_weight="1" />
 
         <TextView
@@ -81,6 +82,7 @@
             android:id="@+id/spinner_minute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            style="@style/spinner_style"
             android:layout_weight="1" />
 
         <TextView
